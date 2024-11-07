@@ -1,10 +1,33 @@
 ﻿//Methods.Login();
+string[] files = {"nature",/*"history","geografy"*/ };
+Dictionary<string, List<int>> questionCategories = new Dictionary<string, List<int>>();
+Methods.PopulatedData(files,questionCategories);
 Methods.ButtonChoiceMainMenu();
 public static class Methods
 {
     static bool isEscapePressed = false;
     static Dictionary<string, int> playerScores = new Dictionary<string, int>();
     static string? LogInplayerName = string.Empty;
+
+    public static Dictionary<int, string> PopulatedData(string[] files, Dictionary<string, List<int>> questionCategories)
+    {
+        List<int> questionsID = new List<int>();
+        Dictionary<int, string> questions = new Dictionary<int, string>();
+        foreach (var file in files)
+        {
+            string[] questionsFromFile = File.ReadAllLines(file + ".txt");
+            
+            for (int i = 0; i < questionsFromFile.Length; i++)
+            {
+                int id = i + 1;
+                questions.Add(id, questionsFromFile[i]);
+                questionsID.Add(id);
+
+            }
+            questionCategories.Add(file, questionsID);
+        }
+        return questions;
+    }
     public static void Login()
     {
         Console.WriteLine("Sveiki, įveskite savo vardą ir pavardę");
@@ -55,8 +78,17 @@ public static class Methods
         Console.WriteLine("Norėdami pasirinkti menu paspauskite atitinkamą mygtuką");
     }
 
-
-public static void PrintPlayers()
+    public static void PrintQuestions()
+    {
+        Console.Clear();
+        Console.WriteLine("Žaidime dalyvautis žaidėjai");
+        foreach (var playerKeyValuePair in playerScores)
+        {
+            Console.WriteLine(playerKeyValuePair.Key);
+        }
+        Console.WriteLine("Norint grįžti į Menu paspauskite B, norint išeiti paspasukite escape");
+    }
+    public static void PrintPlayers()
     {
         Console.Clear();
         Console.WriteLine("Žaidime dalyvautis žaidėjai");
