@@ -1,151 +1,130 @@
 ﻿//Methods.Login();
-string[] files = {"nature",/*"history","geografy"*/ };
+using System;
+
+string[] files = {"nature","geografy"};
 Dictionary<string, List<int>> questionCategories = new Dictionary<string, List<int>>();
-Methods.PopulatedData(files,questionCategories);
-Methods.ButtonChoiceMainMenu();
-public static class Methods
+QuizGame.Login();
+QuizGame.ButtonChoiceMainMenu(files);
+
+public static class QuizGame
 {
+
     static bool isEscapePressed = false;
     static Dictionary<string, int> playerScores = new Dictionary<string, int>();
     static string? LogInplayerName = string.Empty;
 
-    public static Dictionary<int, string> PopulatedData(string[] files, Dictionary<string, List<int>> questionCategories)
+    public static void StartGame(string[]files)
     {
-        List<int> questionsID = new List<int>();
-        Dictionary<int, string> questions = new Dictionary<int, string>();
-        foreach (var file in files)
+        Console.WriteLine($"Logged in player: {LogInplayerName}");
+        PrintQuestionsCategories(files);
+        var chosenCategory = ChosenCategory(files);
+        MainGameEngine(files,chosenCategory);
+
+    }
+    public static void MainGameEngine(string[] files, string chosenCategory)
+    {
+        int index = 0;
+        int totalScore = 0;
+        var categoryDic = GetQuestionByCategories(files);
+        var answersDic = GetAnswersByCategory(files);
+        bool isEscapePressed = false;
+        List<(int questionNumber, bool isCorrect)> questionResults = new List<(int, bool)>();
+
+        int questionCount = GetQuestionCount(categoryDic, chosenCategory, index);
+        Console.WriteLine("Press any key to start game or 'Esc' to quit...");
+        var startKey = Console.ReadKey(true);
+        if (startKey.Key == ConsoleKey.Escape)
         {
-            string[] questionsFromFile = File.ReadAllLines(file + ".txt");
-            
-            for (int i = 0; i < questionsFromFile.Length; i++)
+            Console.WriteLine("Exiting the game...");
+            return;
+        }
+        while (index < questionCount)
+        {
+            Console.Clear();
+            Console.WriteLine(chosenCategory.ToUpper());
+
+            PrintQuestion(categoryDic, chosenCategory, index);
+            AnswersPrint(answersDic, chosenCategory, index);
+            Console.WriteLine("Press answer number:");
+
+            var correctAnswerIndex = GetCorrectAnswerFromData(files, chosenCategory, index);
+            var selectedAnswer = ChosenAnswer();
+            Console.WriteLine($"You selected: {selectedAnswer}");
+
+            // Check if the selected answer matches the correct answer
+            if (selectedAnswer == correctAnswerIndex)
             {
-                int id = i + 1;
-                questions.Add(id, questionsFromFile[i]);
-                questionsID.Add(id);
-
+                Console.WriteLine("Correct!");
+                var points = GetCorrectAnswerPoints(files, chosenCategory, index);
+                totalScore += points;
+                questionResults.Add((index + 1, true));
             }
-            questionCategories.Add(file, questionsID);
-        }
-        return questions;
-    }
-    public static void Login()
-    {
-        Console.WriteLine("Sveiki, įveskite savo vardą ir pavardę");
-        while (true)
-        {
-            LogInplayerName = Console.ReadLine().Trim();
-            if (string.IsNullOrEmpty(LogInplayerName))
+            else
             {
-                Console.WriteLine("Įveskite vardą ir pavardę");
-                continue;
+                Console.WriteLine($"Incorrect. ");
+                questionResults.Add((index + 1, false));
             }
-            else if (playerScores.ContainsKey(LogInplayerName))
+            Console.WriteLine($"Your current score: {totalScore}");
+            index++;
+            if (index < questionCount)
             {
-                Console.WriteLine("Jau egzistuoja toks vartotojas, įveskite kitą vardą ir pavardę");
-                continue;
+                Console.WriteLine("Press any key to continue to the next question or 'Esc' to quit...");
+                var questionKey = Console.ReadKey(true);
+                if (questionKey.Key == ConsoleKey.Escape)
+                {
+                    Console.WriteLine("Exiting the game...");
+                    isEscapePressed = true;
+                    break;
+                }
             }
-            break;
+            else
+            {
+                Console.WriteLine("You've completed all questions in this category!");
+            }
         }
 
-        if (!playerScores.ContainsKey(LogInplayerName))
-        {
-            playerScores.Add(LogInplayerName, 0);
-        }
-    }
-
-    public static void Logout()
-    {
-        Console.WriteLine($"Atsijunge useris {LogInplayerName}");
-        LogInplayerName = string.Empty;
-        Login();
-    }
-
-    public static void AddScore(int scoresToAdd)
-    {
-        if (!string.IsNullOrEmpty(LogInplayerName))
-            playerScores[LogInplayerName] += scoresToAdd;
-    }
-
-    public static void PrintMainMenu()
-    {
-        Console.WriteLine($"Sveikas prisijungęs {LogInplayerName}");
-        Console.WriteLine("[P] Prisijungimas");
-        Console.WriteLine("[A] Atsijungimas");
-        Console.WriteLine("[T] Žaidimų taisyklių atvaizdavimas");
-        Console.WriteLine("[R] Žaidimo rezultatų ir dalyvių peržiūra");
-        Console.WriteLine("[S] Dalyvavimas (Start game)");
-        Console.WriteLine("[Esc]. Išėjimas iš žaidimo ");
-        Console.WriteLine("Norėdami pasirinkti menu paspauskite atitinkamą mygtuką");
-    }
-
-    public static void PrintQuestions()
-    {
         Console.Clear();
-        Console.WriteLine("Žaidime dalyvautis žaidėjai");
-        foreach (var playerKeyValuePair in playerScores)
+        if (!isEscapePressed)
         {
-            Console.WriteLine(playerKeyValuePair.Key);
+            Console.WriteLine("Congratulations! You've completed the game.");
         }
-        Console.WriteLine("Norint grįžti į Menu paspauskite B, norint išeiti paspasukite escape");
-    }
-    public static void PrintPlayers()
-    {
-        Console.Clear();
-        Console.WriteLine("Žaidime dalyvautis žaidėjai");
-        foreach (var playerKeyValuePair in playerScores)
+        else
         {
-            Console.WriteLine(playerKeyValuePair.Key);
+            Console.WriteLine("Game exited early.");
         }
-        Console.WriteLine("Norint grįžti į Menu paspauskite B, norint išeiti paspasukite escape");
-    }
-
-    public static void PrintPlayersResults()
-    {
-        Console.Clear();
-        Console.WriteLine("Žaidime dalyvautis žaidėjai");
-        foreach (var playerKeyValuePair in playerScores)
+        Console.WriteLine($"\nTotal Score: {totalScore}");
+        Console.WriteLine("Question Results:");
+        foreach (var result in questionResults)
         {
-            Console.WriteLine(playerKeyValuePair); 
+            string outcome = result.isCorrect ? "Correct" : "Incorrect";
+            Console.WriteLine($"Question {result.questionNumber}: {outcome}");
         }
-        Console.WriteLine("Norint grįžti į Menu paspauskite B, norint išeiti paspasukite escape");
     }
-    public static void PrintResultMenu()
+    public static string ChosenCategory(string[] files)
     {
-        Console.WriteLine($"Prisijungęs {LogInplayerName}");
-        Console.WriteLine("[D] Dalyviai");
-        Console.WriteLine("[T] Taškai");
-        Console.WriteLine("Norint pasirinkti menu paspauskite atitinkamą mygtuką,\ngrįžti atgal spauskite B,\nišeiti iš žaidimo Esc");
-
-    }
-
-    public static void GamesRules()
-    {
-        Console.WriteLine($"Prisijungęs {LogInplayerName}");
-        Console.WriteLine("Sveikiname prisijungus prie X protmūšio programos.");
-        Console.WriteLine("Šis protmūšis jums leidžia pasirinkti iš X klausimų kategorijų.");
-        Console.WriteLine("Pasirinkus kategoriją pradėsite žaidimą ir turėsite pasirinkti iš 4 galimų variantų,\nkuris yra jūsų klausimui teisingas atsakymas.");
-        Console.WriteLine("Norint grįžti atgal paspauskite B, norint išeiti paspasukite escape");
-    }
-    public static void ButtonsChoiceSecondaryMenu()
-    {
+        var choosenCategory = string.Empty;
         {
             while (true)
             {
                 var button = Console.ReadKey();
+                Console.Clear();
                 switch (button.Key)
                 {
-                    case ConsoleKey.B:
-                        Console.Clear();
+                    case ConsoleKey.NumPad1:
+                        choosenCategory = files[0];
+                        Console.WriteLine($"Your choosen category is {choosenCategory.ToUpper()}");
                         break;
-                    case ConsoleKey.Escape:
-                        Console.WriteLine("Išėjimas iš žaidimo");
-                        isEscapePressed = true;
+                    case ConsoleKey.NumPad2:
+                        choosenCategory = files[1];
+                        Console.WriteLine($"Your choosen category is{choosenCategory.ToUpper()}");
                         break;
-                    case ConsoleKey.D:
-                        PrintPlayers();
+                    case ConsoleKey.NumPad3:
+                        choosenCategory = files[2];
+                        Console.WriteLine($"Your choosen category is{choosenCategory.ToUpper()}");
                         break;
-                    case ConsoleKey.T:
-                        PrintPlayersResults();
+                    case ConsoleKey.NumPad4:
+                        choosenCategory = files[3];;
+                        Console.WriteLine($"Your choosen category is{choosenCategory.ToUpper()}");
                         break;
                     default:
                         Console.WriteLine("unknow command");
@@ -155,36 +134,11 @@ public static class Methods
             }
 
         }
+        return choosenCategory;
     }
-    public static void BackOrExit()
+    public static void ButtonChoiceMainMenu(string [] files)
     {
-        {
-            while (true)
-            {
-                var button = Console.ReadKey();
-                switch (button.Key)
-                {
-                    case ConsoleKey.B:
-                        Console.Clear();
-                        break;
-                    case ConsoleKey.Escape:
-                        Console.WriteLine("Išėjimas iš žaidimo");
-                        isEscapePressed = true;
-                        break;
-                    default:
-                        Console.WriteLine("unknow command");
-                        continue;
-                }
-                break;
-            }
 
-        }
-    }
-
-
-    public static void ButtonChoiceMainMenu()
-    {
-        
         while (!isEscapePressed)
         {
             Console.Clear();
@@ -212,10 +166,11 @@ public static class Methods
                     BackOrExit();
                     continue;
                 case ConsoleKey.S: // START GAME
-                    Console.WriteLine("Žaidimo pradžia");
+                    Console.Clear();
+                    StartGame(files);
                     continue;
                 case ConsoleKey.Escape: // EXIT
-                    Console.WriteLine("Išėjimas iš žaidimo");
+                    Console.WriteLine("Quit Game");
                     isEscapePressed = true;
                     break;
                 default:  // WRONG INPUT
@@ -226,6 +181,318 @@ public static class Methods
         }
 
     }
+    public static void ButtonsChoiceSecondaryMenu()
+    {
+        {
+            while (true)
+            {
+                var button = Console.ReadKey();
+                switch (button.Key)
+                {
+                    case ConsoleKey.B:
+                        Console.Clear();
+                        break;
+                    case ConsoleKey.Escape:
+                        Console.WriteLine("Exit game");
+                        isEscapePressed = true;
+                        break;
+                    case ConsoleKey.D:
+                        PrintPlayers();
+                        break;
+                    case ConsoleKey.T:
+                        PrintPlayersResults();
+                        break;
+                    default:
+                        Console.WriteLine("unknow command");
+                        continue;
+                }
+                break;
+            }
+
+        }
+    }
+    public static int ChosenAnswer()
+    {
+
+        var answersNumbers = 0;
+        {
+            while (true)
+            {
+                var button = Console.ReadKey();
+                Console.Clear();
+                switch (button.Key)
+                {
+                    case ConsoleKey.NumPad1:
+                        answersNumbers = 1;
+                        break;
+                    case ConsoleKey.NumPad2:
+                        answersNumbers = 2;
+                        break;
+                    case ConsoleKey.NumPad3:
+                        answersNumbers = 3;
+                        break;
+                    case ConsoleKey.NumPad4:
+                        answersNumbers = 4;
+                        break;
+                    default:
+                        Console.WriteLine("Unknown command. Please press 1, 2, 3, or 4");
+                        continue;
+                }
+                break;
+            }
+
+        }
+        return answersNumbers;
+    }
+
+
+    public static void PrintQuestionsCategories(string[] dataInfo)
+    {
+        var categoryDic = GetQuestionByCategories(dataInfo);
+        int i = 1;
+            foreach (var category in categoryDic)
+            {
+
+                Console.WriteLine($"Category: {i}. {category.Key}");
+                i++;
+            }
+        
+    }
+    public static int GetQuestionCount(Dictionary<string, List<string[]>> categoryDic, string chosenCategory, int index)
+    {
+        return categoryDic.TryGetValue(chosenCategory, out var questions) ? questions.Count : 0;
+    }
+
+
+
+    public static void PrintQuestion(Dictionary<string, List<string[]>> categoryDic, string chosenCategory, int index)
+    {
+        if (categoryDic.TryGetValue(chosenCategory, out var questions) && index < questions.Count)
+        {
+            Console.WriteLine($"{index + 1}/{questions.Count}: {questions[index][0]}");
+        }
+
+    }
+    public static Dictionary<string, List<string[]>> GetAnswersByCategory(string[] dataInfo)
+    {
+        var answersDic = new Dictionary<string, List<string[]>>();
+        var categoryDic = GetQuestionByCategories(dataInfo);
+
+        foreach (var category in categoryDic)
+        {
+            var answers = new List<string[]>();
+            foreach (var data in category.Value)
+            {
+                var aData = new string[] { data[1], data[2], data[3], data[4] };
+                answers.Add(aData);
+            }
+            answersDic[category.Key] = answers;
+        }
+        return answersDic;
+    }
+    public static void AnswersPrint(Dictionary<string, List<string[]>> answersDic, string chosenCategory, int index)
+    {
+        if (answersDic.TryGetValue(chosenCategory, out var answers) && index < answers.Count)
+        {
+            int answerNumber = 1;
+            foreach (var answer in answers[index])
+            {
+                Console.WriteLine($"{answerNumber}. {answer}");
+                answerNumber++;
+            }
+        }
+    }
+
+    public static int GetCorrectAnswerFromData(string[] dataInfo, string chosencategory, int index)
+    {
+        var categoryDic = GetQuestionByCategories(dataInfo);
+        var correctAnswerList = new List<int>();
+        foreach (var category in categoryDic)
+        {
+            if (category.Key.Equals(chosencategory))
+            {
+                foreach (var data in category.Value)
+                {
+                    var correctAnswer = int.TryParse(data[5], out int i);
+                   
+                    correctAnswerList.Add(i);
+
+                }
+            }
+        }
+        return correctAnswerList[index];
+    }
+    public static int GetCorrectAnswerPoints(string[] dataInfo, string chosencategory, int index)
+    {
+        var categoryDic = GetQuestionByCategories(dataInfo);
+        var correctAnswerList = new List<int>();
+        foreach (var category in categoryDic)
+        {
+            if (category.Key.Equals(chosencategory))
+            {
+                foreach (var data in category.Value)
+                {
+                    var correctAnswer = int.TryParse(data[6], out int i);
+
+                    correctAnswerList.Add(i);
+
+                }
+            }
+        }
+        return correctAnswerList[index];
+    }
+
+    public static Dictionary<string, List<string[]>> GetQuestionByCategories(string[] files) 
+    {
+        var Categories = new Dictionary<string, List<string[]>>();
+        foreach (var category in files)
+        {
+            var failoTurinys = File.ReadAllLines(category + ".txt"); 
+            var categoryQuestions = FileInfoData(failoTurinys); 
+            Categories.Add(category, categoryQuestions);
+        }
+        return Categories;
+    }
+
+    public static List<string[]> FileInfoData(string[] questionsAnswersScores)
+    {
+        var result = new List<string[]>();
+        for (int i = 0; i < questionsAnswersScores.Length; i++)
+        {
+            var susplitintaEilute = questionsAnswersScores[i].Split(';');
+
+            if (susplitintaEilute.Length != 7)
+            {
+                Console.WriteLine("Klaida:\tBlogas eilutes elementu skaicius");
+                continue;
+            }
+
+            result.Add(susplitintaEilute);
+        }
+        return result;
+    }
+
+public static void Login()
+    {
+        Console.WriteLine("Hello enter your name or surname");
+        while (true)
+        {
+            LogInplayerName = Console.ReadLine().Trim();
+            if (string.IsNullOrEmpty(LogInplayerName))
+            {
+                Console.WriteLine("Enter name and surnamie");
+                continue;
+            }
+            else if (playerScores.ContainsKey(LogInplayerName))
+            {
+                Console.WriteLine("Allready in use user");
+                continue;
+            }
+            break;
+        }
+
+        if (!playerScores.ContainsKey(LogInplayerName))
+        {
+            playerScores.Add(LogInplayerName, 0);
+        }
+    }
+
+    public static void Logout()
+    {
+        Console.WriteLine($"Atsijunge useris {LogInplayerName}");
+        LogInplayerName = string.Empty;
+        Login();
+    }
+
+    public static void AddScore(int scoresToAdd)
+    {
+        if (!string.IsNullOrEmpty(LogInplayerName))
+            playerScores[LogInplayerName] += scoresToAdd;
+        Console.WriteLine(playerScores[LogInplayerName]);
+    }
+
+    public static void PrintMainMenu()
+    {
+        Console.Clear();
+        Console.WriteLine($"Hello,logged in {LogInplayerName}");
+        Console.WriteLine("[P] Log in");
+        Console.WriteLine("[A] Log out");
+        Console.WriteLine("[T] Rules");
+        Console.WriteLine("[R] Results and users");
+        Console.WriteLine("[S] Start game");
+        Console.WriteLine("[Esc]. Exit game ");
+        Console.WriteLine("Press button which cattegory you want to choose");
+    }
+
+    public static void PrintQuestions()
+    {
+        Console.Clear();
+        Console.WriteLine("Users in game");
+        foreach (var playerKeyValuePair in playerScores)
+        {
+            Console.WriteLine(playerKeyValuePair.Key);
+        }
+        Console.WriteLine("If you want go back press B, to exit game - escape");
+    }
+    public static void PrintPlayers()
+    {
+        Console.Clear();
+        Console.WriteLine("Users in game");
+        foreach (var playerKeyValuePair in playerScores)
+        {
+            Console.WriteLine(playerKeyValuePair.Key);
+        }
+        Console.WriteLine("If you want go back press B, to exit game - escape");
+    }
+
+    public static void PrintPlayersResults()
+    {
+        Console.Clear();
+        Console.WriteLine("Users in game");
+        foreach (var playerKeyValuePair in playerScores)
+        {
+            Console.WriteLine(playerKeyValuePair); 
+        }
+        Console.WriteLine("If you want go back press B, to exit game - escape");
+    }
+    public static void PrintResultMenu()
+    {
+        Console.WriteLine($"Logged in {LogInplayerName}");
+        Console.WriteLine("[D] Users");
+        Console.WriteLine("[T] Results");
+        Console.WriteLine("If you want go back press B, to exit game - escape");
+
+    }
+
+    public static void GamesRules()
+    {
+        Console.WriteLine($"Logged in {LogInplayerName}");
+        Console.WriteLine("Hello, you joind X quiz game.");
+        Console.WriteLine("This quiz lets you choose 10 question from 4 cattegories");
+        Console.WriteLine("When you choose cattegory, you get 10 question with 4 answers. Chose the right answer");
+        Console.WriteLine("If you want go back press B, to exit game - escape");
+    }
+    public static void BackOrExit()
+    {
+        Console.WriteLine("Press 'B' to go back or 'Escape' to exit.");
+        var button = Console.ReadKey(true).Key;
+        if (button == ConsoleKey.B)
+        {
+            Console.Clear();
+        }
+        else if (button == ConsoleKey.Escape)
+        {
+            Console.WriteLine("Exiting the game...");
+            isEscapePressed = true;
+        }
+        else
+        {
+            Console.WriteLine("Unknown command. Please try again.");
+            BackOrExit();
+        }
+    }
+
+
 }
 
 
