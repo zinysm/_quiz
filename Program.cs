@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Numerics;
-string[] files = {"nature","geografy"};
+string[] files = {"nature", "geography", "maths", "history" };
 Dictionary<string, List<int>> questionCategories = new Dictionary<string, List<int>>();
 Methods.Login();
 Methods.ButtonChoiceMainMenu(files);
@@ -14,7 +14,7 @@ public static class Methods
 
     public static void StartGame(string[] files)
     {
-        Console.WriteLine($"Logged in player: {LogInplayerName}");
+        Console.Title = $"Playing as: {LogInplayerName}";
         PrintQuestionsCategories(files);
 
         int cumulativeScore = 0; 
@@ -23,6 +23,8 @@ public static class Methods
         do
         {
             var chosenCategory = ChosenCategory(files);
+            Console.Title = $"Playing as: {LogInplayerName} - Category: {chosenCategory.ToUpper()}";
+            Console.Clear();
             int categoryScore = MainGameEngine(files, chosenCategory);
 
             if (categoryScore != -1)
@@ -51,6 +53,7 @@ public static class Methods
         List<(int questionNumber, bool isCorrect)> questionResults = new List<(int, bool)>();
 
         int questionCount = GetQuestionCount(categoryDic, chosenCategory, index);
+        Console.Title = $"Playing as: {LogInplayerName} - Category: {chosenCategory.ToUpper()}";
         Console.WriteLine("Press any key to start the game or 'Esc' to quit...");
         var startKey = Console.ReadKey(true);
         if (startKey.Key == ConsoleKey.Escape)
@@ -124,110 +127,9 @@ public static class Methods
         var sortedScores = playerScores.OrderByDescending(score => score.Value).ToList();
         int position = sortedScores.FindIndex(player => player.Key == LogInplayerName) + 1;
 
-        Console.WriteLine($"\nIn {chosenCategory}{LogInplayerName}, you finished in position: {position}");
-        Console.WriteLine("Thanks for playing!");
-        Console.WriteLine("\nPress any key to return to the main menu...");
-        Console.ReadKey();
+        Console.WriteLine($"\nIn {chosenCategory} {LogInplayerName}, you finished in position: {position}");
         return totalScore;
     }
-    //public static void StartGame(string[]files)
-    //{
-    //    Console.WriteLine($"Logged in player: {LogInplayerName}");
-    //    PrintQuestionsCategories(files);
-    //    var chosenCategory = ChosenCategory(files);
-    //    var totalPoints= MainGameEngine(files,chosenCategory);
-    //    AddScore(totalPoints);
-    //}
-
-    //public static int MainGameEngine(string[] files, string chosenCategory)
-    //{
-    //    int index = 0;
-    //    int totalScore = 0;
-    //    var categoryDic = GetQuestionByCategories(files);
-    //    var answersDic = GetAnswersByCategory(files);
-    //    bool isEscapePressed = false;
-    //    List<(int questionNumber, bool isCorrect)> questionResults = new List<(int, bool)>();
-
-    //    int questionCount = GetQuestionCount(categoryDic, chosenCategory, index);
-    //    Console.WriteLine("Press any key to start the game or 'Esc' to quit...");
-    //    var startKey = Console.ReadKey(true);
-    //    if (startKey.Key == ConsoleKey.Escape)
-    //    {
-    //        Console.WriteLine("Exiting the game...");
-    //        return -1;
-    //    }
-
-    //    while (index < questionCount)
-    //    {
-    //        Console.Clear();
-    //        Console.WriteLine($"Category: {chosenCategory.ToUpper()}");
-
-    //        PrintQuestion(categoryDic, chosenCategory, index);
-    //        AnswersPrint(answersDic, chosenCategory, index);
-    //        Console.WriteLine("Press the answer number:");
-
-    //        var correctAnswerIndex = GetCorrectAnswerFromData(files, chosenCategory, index);
-    //        var selectedAnswer = ChosenAnswer();
-    //        Console.WriteLine($"You selected: {selectedAnswer}");
-
-    //        if (selectedAnswer == correctAnswerIndex)
-    //        {
-    //            Console.WriteLine("Correct!");
-    //            int points = GetCorrectAnswerPoints(files, chosenCategory, index);
-    //            totalScore += points;
-    //            questionResults.Add((index + 1, true));
-    //        }
-    //        else
-    //        {
-    //            Console.WriteLine("Incorrect.");
-    //            questionResults.Add((index + 1, false));
-    //        }
-
-    //        Console.WriteLine($"Your current score: {totalScore}");
-    //        index++;
-
-    //        if (index < questionCount)
-    //        {
-    //            Console.WriteLine("Press any key to continue to the next question or 'Esc' to quit...");
-    //            var questionKey = Console.ReadKey(true);
-    //            if (questionKey.Key == ConsoleKey.Escape)
-    //            {
-    //                Console.WriteLine("Exiting the game...");
-    //                isEscapePressed = true;
-    //                break;
-    //            }
-    //        }
-    //        else
-    //        {
-    //            Console.WriteLine("You've completed all questions in this category!");
-    //        }
-    //    }
-    //    Console.Clear();
-    //    if (!isEscapePressed)
-    //    {
-    //        Console.WriteLine("Congratulations! You've completed the game.");
-    //    }
-    //    else
-    //    {
-    //        Console.WriteLine("Game exited early.");
-    //    }
-    //    Console.WriteLine($"\nTotal Score: {totalScore}");
-    //    Console.WriteLine("Question Results:");
-    //    foreach (var result in questionResults)
-    //    {
-    //        string outcome = result.isCorrect ? "Correct" : "Incorrect";
-    //        Console.WriteLine($"Question {result.questionNumber}: {outcome}");
-    //    }
-    //    playerScores[LogInplayerName] = totalScore;
-    //    var sortedScores = playerScores.OrderByDescending(score => score.Value).ToList();
-    //    int position = sortedScores.FindIndex(player => player.Key == LogInplayerName) + 1;
-
-    //    Console.WriteLine($"\n{LogInplayerName}, you finished in position: {position}");
-    //    Console.WriteLine("Thanks for playing!");
-    //    Console.WriteLine("\nPress any key to return to the main menu...");
-    //    Console.ReadKey();
-    //    return totalScore;
-    //}
     public static void AddScore(int scoresToAdd)
     {
         if (!string.IsNullOrEmpty(LogInplayerName))
@@ -238,37 +140,44 @@ public static class Methods
     public static string ChosenCategory(string[] files)
     {
         var choosenCategory = string.Empty;
-        {
-            while (true)
-            {
-                var button = Console.ReadKey();
-                Console.Clear();
-                switch (button.Key)
-                {
-                    case ConsoleKey.NumPad1:
-                        choosenCategory = files[0];
-                        Console.WriteLine($"Your choosen category is {choosenCategory.ToUpper()}");
-                        break;
-                    case ConsoleKey.NumPad2:
-                        choosenCategory = files[1];
-                        Console.WriteLine($"Your choosen category is {choosenCategory.ToUpper()}");
-                        break;
-                    case ConsoleKey.NumPad3:
-                        choosenCategory = files[2];
-                        Console.WriteLine($"Your choosen category is {choosenCategory.ToUpper()}");
-                        break;
-                    case ConsoleKey.NumPad4:
-                        choosenCategory = files[3];;
-                        Console.WriteLine($"Your choosen category is {choosenCategory.ToUpper()}");
-                        break;
-                    default:
-                        Console.WriteLine("unknow command");
-                        continue;
-                }
-                break;
-            }
 
+        while (true)
+        {
+            Console.Clear(); 
+            Console.WriteLine("Please choose a category:");
+            Console.WriteLine("1. " + files[0]);
+            Console.WriteLine("2. " + files[1]);
+            Console.WriteLine("3. " + files[2]);
+            Console.WriteLine("4. " + files[3]);
+            Console.WriteLine("Pick your choice.");
+
+            var button = Console.ReadKey(true);
+
+            switch (button.Key)
+            {
+                case ConsoleKey.NumPad1:
+                    choosenCategory = files[0];
+                    Console.WriteLine($"You chose: {choosenCategory.ToUpper()}");
+                    break;
+                case ConsoleKey.NumPad2:
+                    choosenCategory = files[1];
+                    Console.WriteLine($"You chose: {choosenCategory.ToUpper()}");
+                    break;
+                case ConsoleKey.NumPad3:
+                    choosenCategory = files[2];
+                    Console.WriteLine($"You chose: {choosenCategory.ToUpper()}");
+                    break;
+                case ConsoleKey.NumPad4:
+                    choosenCategory = files[3];
+                    Console.WriteLine($"You chose: {choosenCategory.ToUpper()}");
+                    break;
+                default:
+                    Console.WriteLine("Unknown command. Please press 1, 2, 3, or 4.");
+                    continue; 
+            }
+            break; 
         }
+
         return choosenCategory;
     }
     public static void ButtonChoiceMainMenu(string [] files)
@@ -513,6 +422,19 @@ public static class Methods
 
 public static void Login()
     {
+        if (!string.IsNullOrEmpty(LogInplayerName))
+        {
+            Console.WriteLine($"You are already logged in as {LogInplayerName}. Do you want to log in with a different account? (y/n)");
+            var input = Console.ReadKey(true).Key;
+            if (input == ConsoleKey.Y)
+            {
+                Logout();
+            }
+            else
+            {
+                return; // If the user doesn't want to switch accounts, return
+            }
+        }
         Console.WriteLine("Hello enter your name or surname");
         while (true)
         {
@@ -534,18 +456,40 @@ public static void Login()
         {
             playerScores.Add(LogInplayerName, 0);
         }
+        Console.Title = $"Logged in as: {LogInplayerName}";
     }
 
     public static void Logout()
     {
-        Console.WriteLine($"Atsijunge useris {LogInplayerName}");
-        LogInplayerName = string.Empty;
-        Login();
+        if (string.IsNullOrEmpty(LogInplayerName))
+        {
+            Console.WriteLine("No user is logged in.");
+            return;
+        }
+        Console.WriteLine($"Are you sure you want to log out, {LogInplayerName}? (y/n)");
+        var input = Console.ReadKey(true).Key;
+        if (input == ConsoleKey.Y)
+        {
+            Console.WriteLine($"Logged out user: {LogInplayerName}");
+            LogInplayerName = string.Empty;
+            Console.Title = "No user logged in";
+            Console.WriteLine("Do you want to log in again? (y/n)");
+            input = Console.ReadKey(true).Key;
+            if (input == ConsoleKey.Y)
+            {
+                Login();  
+            }
+        }
+        else
+        {
+            Console.WriteLine("Logout canceled.");
+        }
     }
+
 
     public static void PrintMainMenu()
     {
-        Console.WriteLine($"Hello,logged in {LogInplayerName}");
+        Console.Title = $"Playing as: {LogInplayerName}";
         Console.WriteLine("[P] Log in");
         Console.WriteLine("[A] Log out");
         Console.WriteLine("[T] Rules");
@@ -604,7 +548,6 @@ public static void Login()
     }
     public static void PrintResultMenu()
     {
-        Console.WriteLine($"Logged in {LogInplayerName}");
         Console.WriteLine("[D] User");
         Console.WriteLine("[T] User results");
         Console.WriteLine("If you want go back press B, to exit game - escape");
@@ -613,7 +556,6 @@ public static void Login()
 
     public static void GamesRules()
     {
-        Console.WriteLine($"Logged in {LogInplayerName}");
         Console.WriteLine("Hello, you joind X quiz game.");
         Console.WriteLine("This quiz lets you choose 10 question from 4 cattegories");
         Console.WriteLine("When you choose cattegory, you get 10 question with 4 answers. Chose the right answer");
@@ -643,7 +585,6 @@ public static void Login()
 
         }
     }
-
 
 }
 
